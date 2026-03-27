@@ -1,7 +1,9 @@
+import { HomePage } from "./pages/HomePage";
+
 function PoliticalApp() {
   return (
     <>
-      <h1>political</h1>
+      <HomePage />
     </>
   );
 }
