@@ -9,10 +9,11 @@ import {
   type ChartOptions,
   type ChartData,
 } from "chart.js";
-import { useState } from "react";
+import { use, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import type { Party } from "../types";
 import { PartyItem } from "../components/PartyItem";
+import { WebSocketContext } from "../context/WebSocketContext";
 
 ChartJS.register(
   CategoryScale,
@@ -86,22 +87,43 @@ const initialParties: Party[] = PARTIES.map((party, i) => ({
 }));
 
 export const HomePage = () => {
+  const { status } = use(WebSocketContext);
   const [parties, setParties] = useState<Party[]>(initialParties);
 
   const updatePartyName = (id: string, newName: string) => {
-    //todo
+    setParties((prev) =>
+      prev.map((party) =>
+        party.id === id ? { ...party, name: newName } : party,
+      ),
+    );
   };
 
   const updateVotes = (id: string, value: number) => {
-    //todo
+    setParties((prev) =>
+      prev.map((party) =>
+        party.id === id
+          ? { ...party, votes: Math.max(0, party.votes + value) }
+          : party,
+      ),
+    );
   };
 
   const addParty = () => {
-    //todo
+    const color = PARTY_COLORS[parties.length % PARTY_COLORS.length];
+    const newParty: Party = {
+      id: `${parties.length + 1}`,
+      name: `Nuevo partido ${parties.length + 1}`,
+      votes: 0,
+      color: color.bg,
+      borderColor: color.border,
+    };
+
+    setParties((prev) => [...prev, newParty]);
   };
 
   const removeParty = (id: string) => {
-    //todo
+    const currentParties = parties.filter((party) => party.id !== id);
+    setParties(currentParties);
   };
 
   const chartData: ChartData<"bar"> = {
@@ -119,7 +141,7 @@ export const HomePage = () => {
   return (
     <div className="chart-container">
       <h1>Resultados Electorales</h1>
-      <h3>Conexión: Conectando...</h3>
+      <h3>Conexión: {status}</h3>
 
       <div className="chart-wrapper">
         <Bar options={chartOptions} data={chartData} />
