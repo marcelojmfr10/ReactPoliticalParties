@@ -7,13 +7,10 @@ import {
   Tooltip,
   Legend,
   type ChartOptions,
-  type ChartData,
 } from "chart.js";
-import { use, useState } from "react";
 import { Bar } from "react-chartjs-2";
-import type { Party } from "../types";
 import { PartyItem } from "../components/PartyItem";
-import { WebSocketContext } from "../context/WebSocketContext";
+import { useParties } from "../hooks/useParties";
 
 ChartJS.register(
   CategoryScale,
@@ -23,25 +20,6 @@ ChartJS.register(
   Tooltip,
   Legend,
 );
-
-const PARTY_COLORS = [
-  { bg: "rgba(220, 53, 69, 0.2)", border: "rgb(220, 53, 69)" },
-  { bg: "rgba(0, 123, 255, 0.2)", border: "rgb(0, 123, 255)" },
-  { bg: "rgba(40, 167, 69, 0.2)", border: "rgb(40, 167, 69)" },
-  { bg: "rgba(255, 193, 7, 0.2)", border: "rgb(255, 193, 7)" },
-  { bg: "rgba(255, 152, 0, 0.2)", border: "rgb(255, 152, 0)" },
-  { bg: "rgba(153, 102, 255, 0.2)", border: "rgb(153, 102, 255)" },
-  { bg: "rgba(75, 192, 192, 0.2)", border: "rgb(75, 192, 192)" },
-  { bg: "rgba(255, 99, 132, 0.2)", border: "rgb(255, 99, 132)" },
-];
-
-const PARTIES = [
-  { id: "1", name: "Partido Rojo", votes: 35 },
-  { id: "2", name: "Partido Azul", votes: 42 },
-  { id: "3", name: "Partido Verde", votes: 28 },
-  { id: "4", name: "Partido Amarillo", votes: 23 },
-  { id: "5", name: "Partido Naranja", votes: 15 },
-];
 
 const chartOptions: ChartOptions<"bar"> = {
   responsive: true,
@@ -80,64 +58,16 @@ const chartOptions: ChartOptions<"bar"> = {
   },
 };
 
-const initialParties: Party[] = PARTIES.map((party, i) => ({
-  ...party,
-  color: PARTY_COLORS[i].bg,
-  borderColor: PARTY_COLORS[i].border,
-}));
-
 export const HomePage = () => {
-  const { status } = use(WebSocketContext);
-  const [parties, setParties] = useState<Party[]>(initialParties);
-
-  const updatePartyName = (id: string, newName: string) => {
-    setParties((prev) =>
-      prev.map((party) =>
-        party.id === id ? { ...party, name: newName } : party,
-      ),
-    );
-  };
-
-  const updateVotes = (id: string, value: number) => {
-    setParties((prev) =>
-      prev.map((party) =>
-        party.id === id
-          ? { ...party, votes: Math.max(0, party.votes + value) }
-          : party,
-      ),
-    );
-  };
-
-  const addParty = () => {
-    const color = PARTY_COLORS[parties.length % PARTY_COLORS.length];
-    const newParty: Party = {
-      id: `${parties.length + 1}`,
-      name: `Nuevo partido ${parties.length + 1}`,
-      votes: 0,
-      color: color.bg,
-      borderColor: color.border,
-    };
-
-    setParties((prev) => [...prev, newParty]);
-  };
-
-  const removeParty = (id: string) => {
-    const currentParties = parties.filter((party) => party.id !== id);
-    setParties(currentParties);
-  };
-
-  const chartData: ChartData<"bar"> = {
-    labels: parties.map((p) => p.name),
-    datasets: [
-      {
-        data: parties.map((p) => p.votes),
-        backgroundColor: parties.map((c) => c.color),
-        borderColor: parties.map((c) => c.borderColor),
-        borderWidth: 2,
-      },
-    ],
-  };
-
+  const {
+    status,
+    parties,
+    chartData,
+    addParty,
+    removeParty,
+    updatePartyName,
+    updateVotes,
+  } = useParties();
   return (
     <div className="chart-container">
       <h1>Resultados Electorales</h1>
